@@ -5,7 +5,7 @@ It has a single API `/v1/find-country?ip={IP Address}` that taks IP as the input
 All code classes uses DI.
 
 # Flow of getting an IP
-GeoController (GetCountryByIpAsync) -> GeoHandler (GetFirstOrDefaultGeoInformationByIpAsync) -> GeoProvidersManagement (GetActiveProviders) -> JsonGeoProvider (GetGeoInformationByIpAsync)
+ThrottlingMiddleware -> GeoController (GetCountryByIpAsync) -> GeoHandler (GetFirstOrDefaultGeoInformationByIpAsync) -> GeoProvidersManagement (GetActiveProviders) -> JsonGeoProvider (GetGeoInformationByIpAsync)
 
 # Classes
 ## GeoController
