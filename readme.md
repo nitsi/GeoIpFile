@@ -1,6 +1,6 @@
 # General
 This is a sample project that uses .net core 5.0 MVC API with container technology.  
-It has a single API `/v1/find-country?ip={IP Address}`
+It has a single API `/v1/find-country?ip={IP Address}` that taks IP as the input and find a provider that contains this information and return it.
 
 All code classes uses DI.
 
