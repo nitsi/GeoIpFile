@@ -13,12 +13,10 @@ namespace Kubernetes1.GeoProviders
     /// </summary>
     public class GeoHandler
     {
-        private readonly ILogger<GeoHandler> _logger;
         private readonly GeoProvidersManagement _geoProvidersManagement;
 
-        public GeoHandler(ILogger<GeoHandler> logger, GeoProvidersManagement geoProvidersManagement)
+        public GeoHandler(GeoProvidersManagement geoProvidersManagement)
         {
-            _logger = logger;
             _geoProvidersManagement = geoProvidersManagement;
         }
 
