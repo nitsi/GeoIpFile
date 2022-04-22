@@ -1,15 +1,16 @@
+using System;
+using System.Linq;
+using System.Reflection;
+using Kubernetes1.Configuration;
+using Kubernetes1.GeoProviders;
+using Kubernetes1.GeoProviders.JsonGeoProvider;
+using Kubernetes1.Throttling;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Kubernetes1
 {
@@ -25,12 +26,43 @@ namespace Kubernetes1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Kubernetes1", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Geo location service", Version = "v1" });
             });
+
+            BindConfiguration(services);
+            ConfigureDependencyInjection(services);
+        }
+
+        private void BindConfiguration(IServiceCollection services)
+        {
+            foreach (Type type in Assembly
+                .GetAssembly(typeof(ConfigurationBase))
+                .GetTypes()
+                .Where(configType =>
+                        configType.IsClass && 
+                        !configType.IsAbstract && 
+                        configType.IsSubclassOf(typeof(ConfigurationBase))))
+            {
+                var configurationSection = Configuration.GetSection(type.Name);
+                var configuration = configurationSection.Get(type);
+                services.AddSingleton(type, provider => configuration);
+            }
+        }
+
+        private void ConfigureDependencyInjection(IServiceCollection services)
+        {
+            services.AddSingleton<GeoProvidersManagement>();
+            services.AddSingleton<JsonGeoProvider>();
+            services.AddSingleton(provider => new IGeoProvider[]
+            {
+                provider.GetService<JsonGeoProvider>()
+            });
+
+            services.AddSingleton<JsonGeoDataProvider>();
+            services.AddScoped<GeoHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,6 +78,8 @@ namespace Kubernetes1
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseMiddleware<ThrottlingMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {
