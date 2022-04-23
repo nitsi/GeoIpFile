@@ -23,7 +23,7 @@ namespace Kubernetes1.Throttling
         {
             if (context.Connection.RemoteIpAddress == null)
             {
-                context.Response.StatusCode = 404;
+                context.Response.StatusCode = 400;
                 return Task.FromResult((RequestDelegate)null);
             }
 
