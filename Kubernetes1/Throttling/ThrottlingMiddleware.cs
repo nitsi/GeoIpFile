@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Net;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +10,7 @@ namespace Kubernetes1.Throttling
     {
         private readonly RequestDelegate _next;
         private readonly ThrottlingMiddlewareConfiguration _configuration;
+        private readonly MemoryCache _memoryCache = new (nameof(ThrottlingMiddleware));
 
         public ThrottlingMiddleware(RequestDelegate next, ThrottlingMiddlewareConfiguration configuration)
         {
@@ -29,14 +28,14 @@ namespace Kubernetes1.Throttling
 
             var newCacheItem = new ThrottlingItem
             {
-                Count = 0,
-                WindowDateTime = DateTime.UtcNow
+                Count = 0
             };
 
-            var throttlingItem = MemoryCache.Default.AddOrGetExisting(
+            var throttlingItem = _memoryCache.AddOrGetExisting(
                 context.Connection.RemoteIpAddress.ToString(),
                 newCacheItem,
-                DateTimeOffset.UtcNow.AddSeconds(_configuration.WindowSizeInSeconds)) as ThrottlingItem ?? newCacheItem;
+                DateTimeOffset.UtcNow.AddSeconds(_configuration.WindowSizeInSeconds)
+                ) as ThrottlingItem ?? newCacheItem;
 
             Interlocked.Add(ref throttlingItem.Count, 1);
 
